@@ -12,6 +12,261 @@ datasource db {
   provider = "mysql"
 }
 
+model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  password      String
+  role          UserRole      @default(USER)
+  name          String
+  phone         String        @unique
+  city          String?
+  trustScore    Int           @default(100)
+  accountStatus AccountStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now())
 
+  facilities        Facility[]
+  bookings          Booking[]
+  reviews           Review[]
+  disputesUser      Dispute[]           @relation("UserDisputes")
+  disputesOwner     Dispute[]           @relation("OwnerDisputes")
+  subscriptions     OwnerSubscription[]
+  attendancesMarked Attendance[]
+  escrows           Escrow[]
+}
 
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
+  facilities Facility[]
+}
+
+model Facility {
+  id String @id @default(uuid())
+
+  ownerId    String
+  categoryId Int
+
+  name        String
+  city        String
+  state       String
+  address     String
+  description String?
+
+  amenities  Json?
+
+  latitude  Float?
+  longitude Float?
+
+  isPublished Boolean @default(false)
+  autoAccept  Boolean @default(true)
+
+  rating       Decimal @default(0.0)
+  totalReviews Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  owner    User     @relation(fields: [ownerId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  images       FacilityImage[]
+  slotTemplate SlotTemplate[]
+  slots        FacilitySlot[]
+  bookings     Booking[]
+  reviews      Review[]
+  holidays     Holiday[]
+  disputes     Dispute[]
+}
+
+model FacilityImage {
+  id         String  @id @default(uuid())
+  facilityId String
+  imageUrl   String
+  isPrimary  Boolean @default(false)
+
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+}
+
+model SlotTemplate {
+  id         String   @id @default(uuid())
+  facilityId String
+  slotType   SlotType
+  startTime  String
+  endTime    String
+  capacity   Int
+  price1Day  Int
+  price3Day  Int
+  price7Day  Int
+
+  facility Facility @relation(fields: [facilityId], references: [id])
+
+  @@unique([facilityId, slotType])
+}
+
+model FacilitySlot {
+  id         String   @id @default(uuid())
+  facilityId String
+  date       DateTime
+  slotType   SlotType
+  capacity   Int
+  booked     Int      @default(0)
+
+  facility Facility @relation(fields: [facilityId], references: [id])
+
+  @@unique([facilityId, date, slotType])
+}
+
+model Booking {
+  id                  String        @id @default(uuid())
+  userId              String
+  facilityId          String
+  slotType            SlotType
+  passDays            Int
+  startDate           DateTime
+  endDate             DateTime
+  activeDaysRemaining Int
+  baseAmount          Int
+  platformFee         Int
+  totalAmount         Int
+  status              BookingStatus @default(PENDING)
+  idempotencyKey      String        @unique
+  qrCode              String?
+  createdAt           DateTime      @default(now())
+
+  user       User         @relation(fields: [userId], references: [id])
+  facility   Facility     @relation(fields: [facilityId], references: [id])
+  attendance Attendance[]
+  escrow     Escrow?
+  review     Review?
+  dispute    Dispute?
+}
+
+model Attendance {
+  id        String   @id @default(uuid())
+  bookingId String
+  date      DateTime
+  markedBy  String
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  owner   User    @relation(fields: [markedBy], references: [id])
+
+  @@unique([bookingId, date])
+}
+
+model Escrow {
+  id          String       @id @default(uuid())
+  bookingId   String       @unique
+  ownerId     String
+  amountHeld  Int
+  platformFee Int
+  status      PayoutStatus @default(HELD)
+  releaseDate DateTime
+  releasedAt  DateTime?
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  owner   User    @relation(fields: [ownerId], references: [id])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  userId     String
+  facilityId String
+  bookingId  String   @unique
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id])
+  facility Facility @relation(fields: [facilityId], references: [id])
+  booking  Booking  @relation(fields: [bookingId], references: [id])
+}
+
+model Holiday {
+  id         String   @id @default(uuid())
+  facilityId String
+  date       DateTime
+  reason     String?
+
+  facility Facility @relation(fields: [facilityId], references: [id])
+
+  @@unique([facilityId, date])
+}
+
+model Dispute {
+  id            String        @id @default(uuid())
+  bookingId     String        @unique
+  userId        String
+  ownerId       String
+  facilityId    String
+  reason        DisputeReason
+  description   String?
+  evidenceImage String?
+  userGpsLat    Float?
+  userGpsLng    Float?
+  status        DisputeStatus @default(SUBMITTED)
+  adminDecision String?
+  refundAmount  Int?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  booking  Booking  @relation(fields: [bookingId], references: [id])
+  user     User     @relation("UserDisputes", fields: [userId], references: [id])
+  owner    User     @relation("OwnerDisputes", fields: [ownerId], references: [id])
+  facility Facility @relation(fields: [facilityId], references: [id])
+}
+
+model OwnerSubscription {
+  id        String   @id @default(uuid())
+  ownerId   String
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(true)
+
+  owner User @relation(fields: [ownerId], references: [id])
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  OWNER
+}
+
+enum SlotType {
+  MORNING
+  AFTERNOON
+  EVENING
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum PayoutStatus {
+  HELD
+  RELEASED
+  PAUSED
+  REFUNDED
+}
+
+enum AccountStatus {
+  ACTIVE
+  UNDER_MONITORING
+  SUSPENDED
+}
+
+enum DisputeStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  RESOLVED_REFUND
+  RESOLVED_REJECTED
+}
+
+enum DisputeReason {
+  ENTRY_DENIED
+  FACILITY_CLOSED
+}
