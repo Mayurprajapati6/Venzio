@@ -1,3 +1,4 @@
+import "dotenv/config"; 
 import express from 'express';
 import { serverConfig } from './config';
 import v1Router from './routers/v1/index.router';
@@ -5,7 +6,7 @@ import v2Router from './routers/v2/index.router';
 import { appErrorHandler, genericErrorHandler } from './middlewares/error.middleware';
 import logger from './config/logger.config';
 import { attachCorrelationIdMiddleware } from './middlewares/correlation.middleware';
-import { prisma } from "./lib/prisma";
+
 const app = express();
 
 app.use(express.json());
@@ -27,17 +28,9 @@ app.use(appErrorHandler);
 app.use(genericErrorHandler);
 
 
-const server = app.listen(serverConfig.PORT, () => {
+app.listen(serverConfig.PORT, () => {
     logger.info(`Server is running on http://localhost:${serverConfig.PORT}`);
     logger.info(`Press Ctrl+C to stop the server.`);
 
     console.log(`Server is running on http://localhost:${serverConfig.PORT}`)
-});
-
-process.on("SIGINT", async () => {
-  console.log("Shutting down server...");
-  await prisma.$disconnect();
-  server.close(() => {
-    process.exit(0);
-  });
 });

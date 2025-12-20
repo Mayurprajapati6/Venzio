@@ -2,7 +2,9 @@
 import dotenv from 'dotenv';
 
 type ServerConfig = {
-    PORT: number
+    PORT: number,
+    JWT_SECRET: string,
+    JWT_EXPIRES_IN: string
 }
 
 function loadEnv() {
@@ -13,5 +15,8 @@ function loadEnv() {
 loadEnv();
 
 export const serverConfig: ServerConfig = {
-    PORT: Number(process.env.PORT) || 3001
+    PORT: Number(process.env.PORT) || 3001,
+    JWT_SECRET: process.env.JWT_SECRET || "",
+    JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || ""
+
 };
