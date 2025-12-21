@@ -16,8 +16,7 @@ import { sql } from "drizzle-orm";
 ======================= */
 
 export const users = mysqlTable("users", {
-  id: varchar("id", { length: 36 })
-    .primaryKey(),
+  id: varchar("id", { length: 36 }).primaryKey(),
 
   email: varchar("email", { length: 255 }).notNull(),
   password: varchar("password", { length: 255 }).notNull(),
@@ -69,6 +68,7 @@ export const facilities = mysqlTable("facilities", {
 
   ownerId: varchar("owner_id", { length: 36 }).notNull(),
   categoryId: int("category_id").notNull(),
+  categorySlug: varchar("category_slug", { length: 50 }).notNull(),
 
   name: varchar("name", { length: 255 }).notNull(),
   city: varchar("city", { length: 255 }).notNull(),
@@ -100,7 +100,7 @@ export const facilityImages = mysqlTable("facility_images", {
   id: varchar("id", { length: 36 })
     .primaryKey(),
 
-  facilityId: varchar("facility_id", { length: 36 }).notNull(),
+  facilityId: varchar("facility_id", { length: 36 }).notNull().references(() => facilities.id, { onDelete: "cascade" }),
   imageUrl: varchar("image_url", { length: 500 }).notNull(),
   isPrimary: boolean("is_primary").default(false).notNull(),
 });
