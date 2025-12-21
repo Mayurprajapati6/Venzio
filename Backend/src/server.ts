@@ -6,6 +6,7 @@ import v2Router from './routers/v2/index.router';
 import { appErrorHandler, genericErrorHandler } from './middlewares/error.middleware';
 import logger from './config/logger.config';
 import { attachCorrelationIdMiddleware } from './middlewares/correlation.middleware';
+import { db } from "./db"; 
 
 const app = express();
 
@@ -28,9 +29,21 @@ app.use(appErrorHandler);
 app.use(genericErrorHandler);
 
 
-app.listen(serverConfig.PORT, () => {
+app.listen(serverConfig.PORT, async () => {
     logger.info(`Server is running on http://localhost:${serverConfig.PORT}`);
     logger.info(`Press Ctrl+C to stop the server.`);
 
-    console.log(`Server is running on http://localhost:${serverConfig.PORT}`)
+    // console.log(`Server is running on http://localhost:${serverConfig.PORT}`)
+
+    try {
+        await db.execute("SELECT 1");
+        console.log("✅ Database connected");
+    } catch (err) {
+        console.error("❌ Database connection failed");
+        process.exit(1);
+    }
+
+  console.log(`Server running on http://localhost:${serverConfig.PORT}`);
+
 });
+
