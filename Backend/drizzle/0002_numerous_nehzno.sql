@@ -1,0 +1,1 @@
+ALTER TABLE `facilities` ADD `category_slug` varchar(50) NOT NULL;
