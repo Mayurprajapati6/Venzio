@@ -1,1 +1,0 @@
-ALTER TABLE `facility_images` ADD CONSTRAINT `facility_images_facility_id_facilities_id_fk` FOREIGN KEY (`facility_id`) REFERENCES `facilities`(`id`) ON DELETE cascade ON UPDATE no action;

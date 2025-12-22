@@ -30,8 +30,10 @@ CREATE TABLE `bookings` (
 CREATE TABLE `categories` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`name` varchar(255) NOT NULL,
+	`slug` varchar(50) NOT NULL,
 	CONSTRAINT `categories_id` PRIMARY KEY(`id`),
-	CONSTRAINT `categories_name_unique` UNIQUE(`name`)
+	CONSTRAINT `categories_name_unique` UNIQUE(`name`),
+	CONSTRAINT `categories_slug_unique` UNIQUE(`slug`)
 );
 --> statement-breakpoint
 CREATE TABLE `disputes` (
@@ -70,6 +72,7 @@ CREATE TABLE `facilities` (
 	`id` varchar(36) NOT NULL,
 	`owner_id` varchar(36) NOT NULL,
 	`category_id` int NOT NULL,
+	`category_slug` varchar(50) NOT NULL,
 	`name` varchar(255) NOT NULL,
 	`city` varchar(255) NOT NULL,
 	`state` varchar(255) NOT NULL,
@@ -164,3 +167,5 @@ CREATE TABLE `users` (
 	CONSTRAINT `users_email_unique` UNIQUE(`email`),
 	CONSTRAINT `users_phone_unique` UNIQUE(`phone`)
 );
+--> statement-breakpoint
+ALTER TABLE `facility_images` ADD CONSTRAINT `facility_images_facility_id_facilities_id_fk` FOREIGN KEY (`facility_id`) REFERENCES `facilities`(`id`) ON DELETE cascade ON UPDATE no action;
