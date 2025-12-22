@@ -54,9 +54,12 @@ export const users = mysqlTable("users", {
 export const categories = mysqlTable("categories", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 50 }).notNull(),
 }, (t) => ({
   nameUnique: uniqueIndex("categories_name_unique").on(t.name),
+  slugUnique: uniqueIndex("categories_slug_unique").on(t.slug),
 }));
+
 
 /* =======================
    FACILITY
@@ -82,6 +85,10 @@ export const facilities = mysqlTable("facilities", {
   longitude: decimal("longitude", { precision: 10, scale: 7 }),
 
   isPublished: boolean("is_published").default(false).notNull(),
+
+  isApproved: boolean("is_approved").default(false).notNull(),
+  adminNote: varchar("admin_note", { length: 500 }),
+  
   autoAccept: boolean("auto_accept").default(true).notNull(),
 
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0.0"),
