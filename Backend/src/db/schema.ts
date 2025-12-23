@@ -116,30 +116,45 @@ export const facilityImages = mysqlTable("facility_images", {
    SLOT TEMPLATE
 ======================= */
 
-export const slotTemplates = mysqlTable("slot_templates", {
-  id: varchar("id", { length: 36 })
-    .primaryKey(),
+export const slotTemplates = mysqlTable(
+  "slot_templates",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
 
-  facilityId: varchar("facility_id", { length: 36 }).notNull(),
+    facilityId: varchar("facility_id", { length: 36 }).notNull(),
 
-  slotType: mysqlEnum("slot_type", [
-    "MORNING",
-    "AFTERNOON",
-    "EVENING",
-  ]).notNull(),
+    slotType: mysqlEnum("slot_type", [
+      "MORNING",
+      "AFTERNOON",
+      "EVENING",
+    ]).notNull(),
 
-  startTime: varchar("start_time", { length: 10 }).notNull(),
-  endTime: varchar("end_time", { length: 10 }).notNull(),
+    startTime: varchar("start_time", { length: 10 }).notNull(),
+    endTime: varchar("end_time", { length: 10 }).notNull(),
 
-  capacity: int("capacity").notNull(),
+    capacity: int("capacity").notNull(),
 
-  price1Day: int("price_1_day").notNull(),
-  price3Day: int("price_3_day").notNull(),
-  price7Day: int("price_7_day").notNull(),
-}, (t) => ({
-  uniqueFacilitySlot: uniqueIndex("slot_template_unique")
-    .on(t.facilityId, t.slotType),
-}));
+    price1Day: int("price_1_day").notNull(),
+    price3Day: int("price_3_day").notNull(),
+    price7Day: int("price_7_day").notNull(),
+
+    validFrom: datetime("valid_from").notNull(),
+    validTill: datetime("valid_till").notNull(),
+
+    isActive: boolean("is_active").default(true).notNull(),
+
+    createdAt: datetime("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (t) => ({
+    uniqueFacilitySlot: uniqueIndex("slot_template_unique").on(
+      t.facilityId,
+      t.slotType
+    ),
+  })
+);
+
 
 /* =======================
    FACILITY SLOT
@@ -287,17 +302,30 @@ export const reviews = mysqlTable("reviews", {
    HOLIDAY
 ======================= */
 
-export const holidays = mysqlTable("holidays", {
-  id: varchar("id", { length: 36 })
-    .primaryKey(),
+export const holidays = mysqlTable(
+  "holidays",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
 
-  facilityId: varchar("facility_id", { length: 36 }).notNull(),
-  date: datetime("date").notNull(),
-  reason: varchar("reason", { length: 255 }),
-}, (t) => ({
-  uniqueHoliday: uniqueIndex("holiday_unique")
-    .on(t.facilityId, t.date),
-}));
+    facilityId: varchar("facility_id", { length: 36 }).notNull(),
+
+    startDate: datetime("start_date").notNull(),
+    endDate: datetime("end_date").notNull(),
+
+    reason: varchar("reason", { length: 255 }),
+
+    createdAt: datetime("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (t) => ({
+    uniqueHolidayRange: uniqueIndex("holiday_unique").on(
+      t.facilityId,
+      t.startDate,
+      t.endDate
+    ),
+  })
+);
 
 /* =======================
    DISPUTE
