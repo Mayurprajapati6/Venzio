@@ -5,12 +5,7 @@ import { slotTemplates } from "../../db/schema";
 import { eq } from "drizzle-orm";
 
 export class SlotGenerationService {
-  /**
-   * Generate facility slots for ONE template
-   * - respects template validity (validFrom → validTill)
-   * - skips holidays (date ranges)
-   * - idempotent (safe to re-run)
-   */
+  
   static async generateForTemplate(templateId: string) {
     const [template] = await db
       .select()
@@ -58,12 +53,7 @@ export class SlotGenerationService {
     }
   }
 
-  /**
-   * Regenerate slots for ALL templates of a facility
-   * Called when:
-   * - holiday added / removed
-   * - template created / extended
-   */
+  
   static async regenerateForFacility(facilityId: string) {
     const templates =
       await SlotRepository.getTemplatesByFacility(facilityId);
