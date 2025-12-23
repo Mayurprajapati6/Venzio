@@ -15,6 +15,20 @@
       "when": 1766422666512,
       "tag": "0001_confused_amazoness",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1766517513350,
+      "tag": "0002_peaceful_surge",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1766518250810,
+      "tag": "0003_glossy_rhodey",
+      "breakpoints": true
     }
   ]
 }
