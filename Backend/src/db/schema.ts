@@ -66,8 +66,7 @@ export const categories = mysqlTable("categories", {
 ======================= */
 
 export const facilities = mysqlTable("facilities", {
-  id: varchar("id", { length: 36 })
-    .primaryKey(),
+  id: varchar("id", { length: 36 }).primaryKey(),
 
   ownerId: varchar("owner_id", { length: 36 }).notNull(),
   categoryId: int("category_id").notNull(),
@@ -84,11 +83,20 @@ export const facilities = mysqlTable("facilities", {
   latitude: decimal("latitude", { precision: 10, scale: 7 }),
   longitude: decimal("longitude", { precision: 10, scale: 7 }),
 
+  approvalStatus: mysqlEnum("approval_status", [
+    "DRAFT",
+    "PENDING",
+    "APPROVED",
+    "REJECTED",
+  ])
+    .default("DRAFT")
+    .notNull(),
+
+  approvedAt: datetime("approved_at"),
+  rejectionReason: varchar("rejection_reason", { length: 500 }),
+
   isPublished: boolean("is_published").default(false).notNull(),
 
-  isApproved: boolean("is_approved").default(false).notNull(),
-  adminNote: varchar("admin_note", { length: 500 }),
-  
   autoAccept: boolean("auto_accept").default(true).notNull(),
 
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0.0"),
@@ -98,6 +106,7 @@ export const facilities = mysqlTable("facilities", {
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
 });
+
 
 /* =======================
    FACILITY IMAGE
