@@ -1,4 +1,3 @@
-// src/modules/booking/booking.validator.ts
 import { z } from "zod";
 
 export const createBookingSchema = z.object({

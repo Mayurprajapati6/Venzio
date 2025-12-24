@@ -33,6 +33,25 @@ export class SlotService {
       throw new BadRequestError("Missing required fields");
     }
 
+    // ✅ ADD: at least one pass must exist
+    if (
+      price1Day == null &&
+      price3Day == null &&
+      price7Day == null
+    ) {
+      throw new BadRequestError(
+        "At least one pass price must be provided"
+      );
+    }
+
+    const from = new Date(validFrom);
+    const till = new Date(validTill);
+
+    // ✅ ADD: validity sanity
+    if (till < from) {
+      throw new BadRequestError("validTill must be after validFrom");
+    }
+
     await FacilityPolicy.assertOwner(facilityId, ownerId);
 
     const existing = await SlotRepository.getTemplateByType(
@@ -48,13 +67,23 @@ export class SlotService {
 
     await SlotRepository.createTemplate({
       id: templateId,
-      ...payload,
+      facilityId,
+      slotType,
+      startTime,
+      endTime,
+      capacity,
+      price1Day: price1Day ?? null,
+      price3Day: price3Day ?? null,
+      price7Day: price7Day ?? null,
+      validFrom: from,
+      validTill: till,
     });
 
+    // unchanged
     await SlotGenerationService.generateForTemplate(templateId);
   }
 
-   static async listTemplates(ownerId: string, facilityId: string) {
+  static async listTemplates(ownerId: string, facilityId: string) {
     await FacilityPolicy.assertOwner(facilityId, ownerId);
     return SlotRepository.getTemplatesByFacility(facilityId);
   }
@@ -67,7 +96,7 @@ export class SlotService {
     capacity: number
   ) {
     if (capacity <= 0) {
-       throw new BadRequestError("Capacity must be greater than zero");
+      throw new BadRequestError("Capacity must be greater than zero");
     }
 
     await FacilityPolicy.assertOwner(facilityId, ownerId);
@@ -85,6 +114,7 @@ export class SlotService {
 
     await SlotRepository.updateTemplate(templateId, { capacity });
 
+    // unchanged
     await SlotGenerationService.regenerateForFacility(facilityId);
   }
 }

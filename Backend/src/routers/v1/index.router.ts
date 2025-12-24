@@ -7,7 +7,7 @@ import categoryRouter from '../../modules/category/category.router'
 import slotRouter from '../../modules/slot/slot.router';
 import holidayRouter from '../../modules/holiday/holiday.router';
 import FacilitySerach from '../../modules/facility-public/publicFacility.router';
-
+import bookingRouter from '../../modules/booking/booking.router';
 
 const v1Router = express.Router();
 
@@ -28,12 +28,14 @@ v1Router.use('/facilities', facilityRouter);
 v1Router.use('/categories', categoryRouter);
 
 // slot
-v1Router.use('/slot', slotRouter);
+v1Router.use('/slots', slotRouter);
 
 // holiday
-v1Router.use('/holiday', holidayRouter);
+v1Router.use('/holidays', holidayRouter);
 
 // facilitySearch
 v1Router.use('/public/facilities', FacilitySerach);
 
+// booking
+v1Router.use('/bookings', bookingRouter);
 export default v1Router;

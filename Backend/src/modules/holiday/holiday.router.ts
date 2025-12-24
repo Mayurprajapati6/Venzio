@@ -3,6 +3,8 @@ import { authenticate } from "../../middlewares/auth.middleware";
 import { authorizeRoles } from "../../middlewares/role.middleware";
 import { requireActiveSubscription } from "../../middlewares/ownerSubscription.middleware";
 import { HolidayController } from "./holiday.controller";
+import { createHolidaySchema } from "../../validators/holiday.validator";
+import { validateRequestBody } from "../../validators";
 
 const router = express.Router();
 
@@ -23,6 +25,7 @@ router.get(
   authenticate,
   authorizeRoles("OWNER"),
   requireActiveSubscription,
+  validateRequestBody(createHolidaySchema),
   HolidayController.list
 );
 

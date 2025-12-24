@@ -4,7 +4,7 @@ enum Role {
     "USER"
 }
 
-const authDto = {
+export type RegisterDTO  = {
     email: String,
     password: String,
     name: String,
@@ -12,4 +12,8 @@ const authDto = {
     role: Role
 }
 
-export default authDto;
+export type LoginDTO = {
+  email: string;
+  password: string;
+};
+

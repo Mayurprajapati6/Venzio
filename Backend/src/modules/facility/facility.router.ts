@@ -3,6 +3,8 @@ import { authenticate } from "../../middlewares/auth.middleware";
 import { authorizeRoles } from "../../middlewares/role.middleware";
 import { requireActiveSubscription } from "../../middlewares/ownerSubscription.middleware";
 import { FacilityController } from "./facility.controller";
+import { createFacilitySchema } from '../../validators/facility.validator';
+import { validateRequestBody } from '../../validators';
 
 const router = express.Router();
 
@@ -51,6 +53,7 @@ router.get(
   "/admin/pending",
   authenticate,
   authorizeRoles("ADMIN"),
+  validateRequestBody(createFacilitySchema),
   FacilityController.adminPending
 );
 

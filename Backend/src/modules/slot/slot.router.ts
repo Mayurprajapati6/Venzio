@@ -3,6 +3,8 @@ import { authenticate } from "../../middlewares/auth.middleware";
 import { authorizeRoles } from "../../middlewares/role.middleware";
 import { requireActiveSubscription } from "../../middlewares/ownerSubscription.middleware";
 import { SlotController } from "./slot.controller";
+import { validateRequestBody } from "../../validators";
+import { createSlotTemplateSchema } from "../../validators/slot.validator";
 
 const router = express.Router();
 
@@ -15,6 +17,7 @@ router.post(
   authenticate,
   authorizeRoles("OWNER"),
   requireActiveSubscription,
+  validateRequestBody(createSlotTemplateSchema),
   SlotController.createTemplate
 );
 

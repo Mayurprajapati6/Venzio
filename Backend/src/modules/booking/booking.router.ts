@@ -3,7 +3,7 @@ import { BookingController } from "./booking.controller";
 import { authenticate } from "../../middlewares/auth.middleware";
 import { authorizeRoles } from "../../middlewares/role.middleware";
 import { createBookingSchema } from "../../validators/booking.validator";
-import { validate } from "../../middlewares/bookingValidate.middleware";
+import { validateRequestBody } from "../../validators";
 
 const router = Router();
 
@@ -11,7 +11,7 @@ router.post(
   "/",
   authenticate,
   authorizeRoles("USER"),
-  validate(createBookingSchema),
+  validateRequestBody(createBookingSchema),
   BookingController.create
 );
 

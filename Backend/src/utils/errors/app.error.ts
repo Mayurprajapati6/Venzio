@@ -6,7 +6,7 @@
  * Interface representing a custom application error.
  */
 export interface AppError extends Error {
-    statusCode: number;
+    
     
 }
 

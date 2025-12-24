@@ -1,5 +1,5 @@
-import { sql, and, eq, between } from "drizzle-orm";
-import { bookings, facilitySlots, holidays, slotTemplates } from "../../db/schema";
+import { sql, and, eq } from "drizzle-orm";
+import { bookings, slotTemplates } from "../../db/schema";
 
 export class BookingRepository {
 
