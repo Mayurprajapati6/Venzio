@@ -2,6 +2,12 @@ import express from 'express';
 import pingRouter from './ping.router';
 import authRouter from '../../modules/auth/auth.router';
 import subscriptionRouter from '../../modules/subscription/subscription.router'
+import facilityRouter from '../../modules/facility/facility.router';
+import categoryRouter from '../../modules/category/category.router'
+import slotRouter from '../../modules/slot/slot.router';
+import holidayRouter from '../../modules/holiday/holiday.router';
+import FacilitySerach from '../../modules/facility-public/publicFacility.router';
+
 
 const v1Router = express.Router();
 
@@ -14,5 +20,20 @@ v1Router.use('/auth', authRouter);
 
 // subscription
 v1Router.use('/subscription',subscriptionRouter);
+
+// facility
+v1Router.use('/facilities', facilityRouter);
+
+// category
+v1Router.use('/categories', categoryRouter);
+
+// slot
+v1Router.use('/slot', slotRouter);
+
+// holiday
+v1Router.use('/holiday', holidayRouter);
+
+// facilitySearch
+v1Router.use('/public/facilities', FacilitySerach);
 
 export default v1Router;
