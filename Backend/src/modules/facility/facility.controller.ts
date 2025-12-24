@@ -5,9 +5,13 @@ import { StatusCodes } from "http-status-codes";
 
 export class FacilityController {
   static async create(req: AuthRequest, res: Response) {
-    const ownerId = req.user!.userId;
-    const result = await FacilityService.create(ownerId, req.body);
+    const result = await FacilityService.create(req.user!.userId, req.body);
     res.status(StatusCodes.CREATED).json(result);
+  }
+
+  static async publish(req: AuthRequest, res: Response) {
+    await FacilityService.publish(req.user!.userId, req.params.facilityId);
+    res.status(StatusCodes.OK).json({ message: "Published" });
   }
 
   static async myFacilities(req: AuthRequest, res: Response) {
@@ -15,10 +19,6 @@ export class FacilityController {
     res.status(StatusCodes.OK).json(await FacilityService.listMyFacilities(ownerId));
   }
 
-  static async publish(req: AuthRequest, res: Response) {
-    await FacilityService.publish(req.user!.userId, req.params.facilityId);
-    res.status(StatusCodes.OK).json({ message: "Facility published" });
-  }
 
   static async unpublish(req: AuthRequest, res: Response) {
     await FacilityService.unpublish(req.user!.userId, req.params.facilityId);
@@ -30,14 +30,16 @@ export class FacilityController {
     res.status(StatusCodes.OK).json({ message: "Facility deleted" });
   }
 
+  // ADMIN
   static async adminPending(req: AuthRequest, res: Response) {
-    const data = await FacilityService.adminPendingFacilities();
-    res.status(StatusCodes.OK).json(data);
+    res
+      .status(StatusCodes.OK)
+      .json(await FacilityService.adminPending());
   }
 
   static async adminApprove(req: AuthRequest, res: Response) {
     await FacilityService.adminApprove(req.params.facilityId);
-    res.status(StatusCodes.OK).json({ message: "Facility approved" });
+    res.status(StatusCodes.OK).json({ message: "Approved" });
   }
 
   static async adminReject(req: AuthRequest, res: Response) {
@@ -45,7 +47,8 @@ export class FacilityController {
       req.params.facilityId,
       req.body.reason
     );
-    res.status(StatusCodes.OK).json({ message: "Facility rejected" });
+    res.status(StatusCodes.OK).json({ message: "Rejected" });
   }
-
 }
+
+

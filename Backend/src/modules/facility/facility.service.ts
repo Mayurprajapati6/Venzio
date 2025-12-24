@@ -1,87 +1,76 @@
 import { randomUUID } from "crypto";
 import { FacilityRepository } from "./facility.repository";
 import { FacilityPolicy } from "./facility.policy";
-import { ForbiddenError, BadRequestError } from "../../utils/errors/app.error";
+import { BadRequestError } from "../../utils/errors/app.error";
 import { CategoryRepository } from "../category/category.repository";
 import { categoryAmenities } from "../../config/categoryAmenities";
 
 export class FacilityService {
   static async create(ownerId: string, payload: any) {
-  
-    if (
-      !payload.categoryId ||
-      !payload.name ||
-      !payload.city ||
-      !payload.state ||
-      !payload.address
-    ) {
+    if (!payload.categoryId || !payload.name || !payload.city) {
       throw new BadRequestError("Missing required fields");
     }
 
-   
     const category = await CategoryRepository.getById(payload.categoryId);
-    if (!category) {
-      throw new BadRequestError("Invalid category");
-    }
+    if (!category) throw new BadRequestError("Invalid category");
 
-    const categorySlug = category.slug; 
+    const allowedAmenities = categoryAmenities[category.slug] ?? [];
+    const selectedAmenities = payload.amenities ?? [];
 
-    
-    const allowedAmenities = categoryAmenities[categorySlug] ?? [];
-
-    const selectedAmenities: string[] = Array.isArray(payload.amenities)
-      ? payload.amenities
-      : [];
-
-    const invalidAmenities = selectedAmenities.filter(
-      (a) => !allowedAmenities.includes(a)
+    const invalid = selectedAmenities.filter(
+      (a: string) => !allowedAmenities.includes(a)
     );
 
-    if (invalidAmenities.length > 0) {
-      throw new BadRequestError(
-        `Invalid amenities: ${invalidAmenities.join(", ")}`
-      );
+    if (invalid.length) {
+      throw new BadRequestError(`Invalid amenities: ${invalid.join(", ")}`);
     }
 
-    
     const facilityId = randomUUID();
 
     await FacilityRepository.createFacility({
       id: facilityId,
       ownerId,
       categoryId: category.id,
-      categorySlug,
-
+      categorySlug: category.slug,
       name: payload.name,
       city: payload.city,
       state: payload.state,
       address: payload.address,
       description: payload.description ?? null,
-
       amenities: selectedAmenities,
       latitude: payload.latitude ?? null,
       longitude: payload.longitude ?? null,
-
-      autoAccept: payload.autoAccept ?? true,
+      approvalStatus: "DRAFT",
       isPublished: false,
     });
 
-   
-    await FacilityRepository.addImages(
-      facilityId,
-      payload.images ?? []
-    );
+    await FacilityRepository.addImages(facilityId, payload.images ?? []);
 
     return { facilityId };
   }
 
-  static async listMyFacilities(ownerId: string) {
-    return FacilityRepository.getByOwner(ownerId);
+  static async submitForApproval(ownerId: string, facilityId: string) {
+    const facility = await FacilityPolicy.assertOwner(facilityId, ownerId);
+
+    if (facility.approvalStatus !== "DRAFT") {
+      throw new BadRequestError("Facility already submitted");
+    }
+
+    await FacilityRepository.updatePublishStatus(facilityId, false);
+
+    await FacilityRepository.reject(facilityId, null as any); // reset rejection
+    await FacilityRepository.approve(facilityId);
   }
 
   static async publish(ownerId: string, facilityId: string) {
-    await FacilityPolicy.assertOwner(facilityId, ownerId);
+    const facility = await FacilityPolicy.assertOwner(facilityId, ownerId);
+    FacilityPolicy.assertApproved(facility);
+
     await FacilityRepository.updatePublishStatus(facilityId, true);
+  }
+
+  static async listMyFacilities(ownerId: string) {
+    return FacilityRepository.getByOwner(ownerId);
   }
 
   static async unpublish(ownerId: string, facilityId: string) {
@@ -94,19 +83,20 @@ export class FacilityService {
     await FacilityRepository.deleteFacility(facilityId);
   }
 
-  static async adminPendingFacilities() {
+  // ADMIN
+  static adminPending() {
     return FacilityRepository.getPendingApproval();
   }
 
-  static async adminApprove(facilityId: string) {
-    await FacilityRepository.approve(facilityId);
+  static adminApprove(id: string) {
+    return FacilityRepository.approve(id);
   }
 
-  static async adminReject(facilityId: string, reason: string) {
-    if (!reason) {
-      throw new BadRequestError("Rejection reason required");
-    }
-
-    await FacilityRepository.reject(facilityId, reason);
+  static adminReject(id: string, reason: string) {
+    if (!reason) throw new BadRequestError("Reason required");
+    return FacilityRepository.reject(id, reason);
   }
 }
+
+
+

@@ -25,7 +25,7 @@ export class FacilityRepository {
     );
   }
 
-  static async getByOwner(ownerId: string) {
+  static getByOwner(ownerId: string) {
     return db
       .select()
       .from(facilities)
@@ -41,46 +41,46 @@ export class FacilityRepository {
     return facility ?? null;
   }
 
-  static async updatePublishStatus(
-    facilityId: string,
-    isPublished: boolean
-  ) {
-    await db
+  static updatePublishStatus(id: string, isPublished: boolean) {
+    return db
       .update(facilities)
       .set({ isPublished })
-      .where(eq(facilities.id, facilityId));
+      .where(eq(facilities.id, id));
   }
 
   static async deleteFacility(facilityId: string) {
     await db.delete(facilities).where(eq(facilities.id, facilityId));
   }
 
-  static async getPendingApproval() {
+  static getPendingApproval() {
     return db
       .select()
       .from(facilities)
-      .where(eq(facilities.isApproved, false));
+      .where(eq(facilities.approvalStatus, "PENDING"));
   }
 
-  static async approve(facilityId: string) {
-    await db
+  static approve(id: string) {
+    return db
       .update(facilities)
       .set({
-        isApproved: true,
-        adminNote: null,
+        approvalStatus: "APPROVED",
+        approvedAt: new Date(),
+        rejectionReason: null,
       })
-      .where(eq(facilities.id, facilityId));
+      .where(eq(facilities.id, id));
   }
 
-  static async reject(facilityId: string, reason: string) {
-    await db
+  static reject(id: string, reason: string) {
+    return db
       .update(facilities)
       .set({
-        isApproved: false,
+        approvalStatus: "REJECTED",
         isPublished: false,
-        adminNote: reason,
+        rejectionReason: reason,
       })
-      .where(eq(facilities.id, facilityId));
+      .where(eq(facilities.id, id));
   }
-
 }
+
+
+
