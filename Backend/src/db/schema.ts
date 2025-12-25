@@ -143,9 +143,9 @@ export const slotTemplates = mysqlTable(
 
     capacity: int("capacity").notNull(),
 
-    price1Day: int("price_1_day").notNull(),
-    price3Day: int("price_3_day").notNull(),
-    price7Day: int("price_7_day").notNull(),
+    price1Day: int("price_1_day"),
+    price3Day: int("price_3_day"),
+    price7Day: int("price_7_day"),
 
     validFrom: datetime("valid_from").notNull(),
     validTill: datetime("valid_till").notNull(),
