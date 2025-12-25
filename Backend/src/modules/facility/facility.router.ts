@@ -1,13 +1,14 @@
-import express from 'express'
+import express from "express";
 import { authenticate } from "../../middlewares/auth.middleware";
 import { authorizeRoles } from "../../middlewares/role.middleware";
 import { requireActiveSubscription } from "../../middlewares/ownerSubscription.middleware";
 import { FacilityController } from "./facility.controller";
-import { createFacilitySchema } from '../../validators/facility.validator';
-import { validateRequestBody } from '../../validators';
+import { validateRequestBody } from "../../validators";
+import { createFacilitySchema } from "../../validators/facility.validator";
 
 const router = express.Router();
 
+// OWNER
 router.post(
   "/",
   authenticate,
@@ -26,19 +27,11 @@ router.get(
 );
 
 router.patch(
-  "/:facilityId/publish",
+  "/:facilityId/submit",
   authenticate,
   authorizeRoles("OWNER"),
   requireActiveSubscription,
-  FacilityController.publish
-);
-
-router.patch(
-  "/:facilityId/unpublish",
-  authenticate,
-  authorizeRoles("OWNER"),
-  requireActiveSubscription,
-  FacilityController.unpublish
+  FacilityController.submitForApproval
 );
 
 router.delete(
@@ -49,15 +42,7 @@ router.delete(
   FacilityController.delete
 );
 
-router.patch(
-  "/:facilityId/submit",
-  authenticate,
-  authorizeRoles("OWNER"),
-  requireActiveSubscription,
-  FacilityController.submitForApproval
-);
-
-// ADMIN ROUTES
+// ADMIN
 router.get(
   "/admin/pending",
   authenticate,
@@ -78,7 +63,5 @@ router.patch(
   authorizeRoles("ADMIN"),
   FacilityController.adminReject
 );
-
-
 
 export default router;

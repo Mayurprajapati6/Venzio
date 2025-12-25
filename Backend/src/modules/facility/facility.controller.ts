@@ -9,20 +9,10 @@ export class FacilityController {
     res.status(StatusCodes.CREATED).json(result);
   }
 
-  static async publish(req: AuthRequest, res: Response) {
-    await FacilityService.publish(req.user!.userId, req.params.facilityId);
-    res.status(StatusCodes.OK).json({ message: "Published" });
-  }
-
   static async myFacilities(req: AuthRequest, res: Response) {
-    const ownerId = req.user!.userId;
-    res.status(StatusCodes.OK).json(await FacilityService.listMyFacilities(ownerId));
-  }
-
-
-  static async unpublish(req: AuthRequest, res: Response) {
-    await FacilityService.unpublish(req.user!.userId, req.params.facilityId);
-    res.status(StatusCodes.OK).json({ message: "Facility unpublished" });
+    res
+      .status(StatusCodes.OK)
+      .json(await FacilityService.listMyFacilities(req.user!.userId));
   }
 
   static async delete(req: AuthRequest, res: Response) {
@@ -30,16 +20,25 @@ export class FacilityController {
     res.status(StatusCodes.OK).json({ message: "Facility deleted" });
   }
 
+  static async submitForApproval(req: AuthRequest, res: Response) {
+    await FacilityService.submitForApproval(
+      req.user!.userId,
+      req.params.facilityId
+    );
+
+    res.status(StatusCodes.OK).json({
+      message: "Facility submitted for admin approval",
+    });
+  }
+
   // ADMIN
   static async adminPending(req: AuthRequest, res: Response) {
-    res
-      .status(StatusCodes.OK)
-      .json(await FacilityService.adminPending());
+    res.status(StatusCodes.OK).json(await FacilityService.adminPending());
   }
 
   static async adminApprove(req: AuthRequest, res: Response) {
     await FacilityService.adminApprove(req.params.facilityId);
-    res.status(StatusCodes.OK).json({ message: "Approved" });
+    res.status(StatusCodes.OK).json({ message: "Approved & Published" });
   }
 
   static async adminReject(req: AuthRequest, res: Response) {
@@ -49,18 +48,4 @@ export class FacilityController {
     );
     res.status(StatusCodes.OK).json({ message: "Rejected" });
   }
-
-  static async submitForApproval(req: AuthRequest, res: Response) {
-  await FacilityService.submitForApproval(
-    req.user!.userId,
-    req.params.facilityId
-  );
-
-  res.status(StatusCodes.OK).json({
-    message: "Facility submitted for admin approval",
-  });
 }
-
-}
-
-

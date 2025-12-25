@@ -50,33 +50,17 @@ export class FacilityService {
   }
 
   static async submitForApproval(ownerId: string, facilityId: string) {
-  const facility = await FacilityPolicy.assertOwner(facilityId, ownerId);
-
-  if (facility.approvalStatus !== "DRAFT") {
-    throw new BadRequestError("Facility already submitted");
-  }
-
-  await FacilityRepository.updateApprovalStatus(
-    facilityId,
-    "PENDING"
-  );
-}
-
-
-  static async publish(ownerId: string, facilityId: string) {
     const facility = await FacilityPolicy.assertOwner(facilityId, ownerId);
-    FacilityPolicy.assertApproved(facility);
 
-    await FacilityRepository.updatePublishStatus(facilityId, true);
+    if (facility.approvalStatus !== "DRAFT") {
+      throw new BadRequestError("Facility already submitted");
+    }
+
+    await FacilityRepository.updateApprovalStatus(facilityId, "PENDING");
   }
 
   static async listMyFacilities(ownerId: string) {
     return FacilityRepository.getByOwner(ownerId);
-  }
-
-  static async unpublish(ownerId: string, facilityId: string) {
-    await FacilityPolicy.assertOwner(facilityId, ownerId);
-    await FacilityRepository.updatePublishStatus(facilityId, false);
   }
 
   static async delete(ownerId: string, facilityId: string) {
@@ -88,20 +72,13 @@ export class FacilityService {
   static adminPending() {
     return FacilityRepository.getPendingApproval();
   }
+
   static adminApprove(id: string) {
     return FacilityRepository.updateApprovalStatus(id, "APPROVED");
   }
 
   static adminReject(id: string, reason: string) {
     if (!reason) throw new BadRequestError("Reason required");
-
-    return FacilityRepository.updateApprovalStatus(
-      id,
-      "REJECTED",
-      reason
-    );
+    return FacilityRepository.updateApprovalStatus(id, "REJECTED", reason);
   }
 }
-
-
-
