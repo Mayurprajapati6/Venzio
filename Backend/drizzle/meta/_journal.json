@@ -36,6 +36,13 @@
       "when": 1766560713368,
       "tag": "0004_handy_speed",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1766640524608,
+      "tag": "0005_lethal_shiver_man",
+      "breakpoints": true
     }
   ]
 }
