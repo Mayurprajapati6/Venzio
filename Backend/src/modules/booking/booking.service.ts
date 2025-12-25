@@ -2,7 +2,7 @@ import { createBookingTransaction } from "./booking.transaction";
 import {
   checkIdempotency,
   saveIdempotency,
-} from "../../utils/idempotency";
+} from "../../utils/helpers/idempotency";
 import {
   ConflictError,
   BadRequestError,

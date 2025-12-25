@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { AuthRepository } from "./auth.repository";
-import { signToken } from "../../utils/jwt";
+import { signToken } from "../../utils/helpers/jwt";
 import { ConflictError, UnauthorizedError } from "../../utils/errors/app.error";
 
 export class AuthService {

@@ -1,5 +1,5 @@
 import jwt, { JwtPayload as JwtLibPayload, SignOptions } from "jsonwebtoken";
-import { serverConfig } from "../config";
+import { serverConfig } from "../../config";
 
 const JWT_SECRET: string = serverConfig.JWT_SECRET as string;
 

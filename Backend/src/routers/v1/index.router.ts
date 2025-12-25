@@ -8,6 +8,7 @@ import slotRouter from '../../modules/slot/slot.router';
 import holidayRouter from '../../modules/holiday/holiday.router';
 import FacilitySerach from '../../modules/facility-public/publicFacility.router';
 import bookingRouter from '../../modules/booking/booking.router';
+import attendanceRouter from '../../modules/attendance/attendance.router';
 
 const v1Router = express.Router();
 
@@ -38,4 +39,9 @@ v1Router.use('/public/facilities', FacilitySerach);
 
 // booking
 v1Router.use('/bookings', bookingRouter);
+
+// attendance
+v1Router.use('/attendance', attendanceRouter);
+
 export default v1Router;
+

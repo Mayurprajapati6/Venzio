@@ -1,4 +1,4 @@
-import { redis } from "../lib/redis";
+import { redis } from "../../lib/redis";
 
 const TTL_SECONDS = 60 * 10; // 10 minutes
 
