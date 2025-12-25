@@ -49,6 +49,18 @@ export class FacilityController {
     );
     res.status(StatusCodes.OK).json({ message: "Rejected" });
   }
+
+  static async submitForApproval(req: AuthRequest, res: Response) {
+  await FacilityService.submitForApproval(
+    req.user!.userId,
+    req.params.facilityId
+  );
+
+  res.status(StatusCodes.OK).json({
+    message: "Facility submitted for admin approval",
+  });
+}
+
 }
 
 

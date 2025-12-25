@@ -13,6 +13,7 @@ router.post(
   authenticate,
   authorizeRoles("OWNER"),
   requireActiveSubscription,
+  validateRequestBody(createFacilitySchema),
   FacilityController.create
 );
 
@@ -48,12 +49,19 @@ router.delete(
   FacilityController.delete
 );
 
+router.patch(
+  "/:facilityId/submit",
+  authenticate,
+  authorizeRoles("OWNER"),
+  requireActiveSubscription,
+  FacilityController.submitForApproval
+);
+
 // ADMIN ROUTES
 router.get(
   "/admin/pending",
   authenticate,
   authorizeRoles("ADMIN"),
-  validateRequestBody(createFacilitySchema),
   FacilityController.adminPending
 );
 
@@ -70,6 +78,7 @@ router.patch(
   authorizeRoles("ADMIN"),
   FacilityController.adminReject
 );
+
 
 
 export default router;

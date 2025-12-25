@@ -80,6 +80,37 @@ export class FacilityRepository {
       })
       .where(eq(facilities.id, id));
   }
+
+  static updateApprovalStatus(
+  id: string,
+  status: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED",
+  reason?: string
+) {
+  const updateData: any = {
+    approvalStatus: status,
+  };
+
+  if (status === "APPROVED") {
+    updateData.approvedAt = new Date();
+    updateData.rejectionReason = null;
+  }
+
+  if (status === "REJECTED") {
+    updateData.approvedAt = null;
+    updateData.rejectionReason = reason ?? "Rejected by admin";
+  }
+
+  if (status === "DRAFT" || status === "PENDING") {
+    updateData.approvedAt = null;
+    updateData.rejectionReason = null;
+  }
+
+  return db
+    .update(facilities)
+    .set(updateData)
+    .where(eq(facilities.id, id));
+}
+
 }
 
 
