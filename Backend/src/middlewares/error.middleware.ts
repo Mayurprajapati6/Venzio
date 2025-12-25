@@ -1,14 +1,22 @@
 import { NextFunction, Request, Response } from "express";
-import { AppError } from "../utils/errors/app.error";
+import { StatusCodes } from "http-status-codes";
 
-export const appErrorHandler = (err: AppError, req: Request, res: Response, next: NextFunction) => {
+export function appErrorHandler(
+  err: any,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const status =
+    typeof err?.statusCode === "number"
+      ? err.statusCode
+      : StatusCodes.INTERNAL_SERVER_ERROR;
 
-    console.log(err);
-
-    res.status(err.statusCode).json({
-        success: false,
-        message: err.message
-    });
+  res.status(status).json({
+    success: false,
+    error: err.name ?? "InternalServerError",
+    message: err.message ?? "Something went wrong",
+  });
 }
 
 export const genericErrorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
