@@ -43,6 +43,13 @@
       "when": 1766640524608,
       "tag": "0005_lethal_shiver_man",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1766653833989,
+      "tag": "0006_marvelous_white_queen",
+      "breakpoints": true
     }
   ]
 }
