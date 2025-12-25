@@ -243,16 +243,21 @@ export const bookings = mysqlTable("bookings", {
 ======================= */
 
 export const attendance = mysqlTable("attendance", {
-  id: varchar("id", { length: 36 })
-    .primaryKey(),
+  id: varchar("id", { length: 36 }).primaryKey(),
 
   bookingId: varchar("booking_id", { length: 36 }).notNull(),
+  facilityId: varchar("facility_id", { length: 36 }).notNull(),
+
   date: datetime("date").notNull(),
-  markedBy: varchar("marked_by", { length: 36 }).notNull(),
+
+  createdAt: datetime("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
 }, (t) => ({
-  uniqueAttendance: uniqueIndex("attendance_unique")
+  uniqueDailyAttendance: uniqueIndex("attendance_unique")
     .on(t.bookingId, t.date),
 }));
+
 
 /* =======================
    ESCROW
