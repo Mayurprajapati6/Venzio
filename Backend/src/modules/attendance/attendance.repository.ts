@@ -1,5 +1,5 @@
 import { attendance, bookings, holidays } from "../../db/schema";
-import { and, eq, between } from "drizzle-orm";
+import { and, eq, between, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export class AttendanceRepository {
@@ -68,7 +68,7 @@ export class AttendanceRepository {
     tx: any,
     bookingId: string
   ) {
-    await tx.execute(`
+    await tx.execute(sql`
       UPDATE bookings
       SET active_days_remaining = active_days_remaining - 1
       WHERE id = '${bookingId}'
@@ -79,7 +79,7 @@ export class AttendanceRepository {
     tx: any,
     bookingId: string
   ) {
-    await tx.execute(`
+    await tx.execute(sql`
       UPDATE bookings
       SET status = 'COMPLETED'
       WHERE id = '${bookingId}'
