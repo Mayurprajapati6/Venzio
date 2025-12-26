@@ -401,3 +401,45 @@ export const ownerSubscriptions = mysqlTable("owner_subscriptions", {
 
   isActive: boolean("is_active").default(true).notNull(),
 });
+
+/* =======================
+   PAYMENT
+======================= */
+
+export const payments = mysqlTable("payments", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+
+  razorpayOrderId: varchar("razorpay_order_id", { length: 255 }).notNull(),
+  razorpayPaymentId: varchar("razorpay_payment_id", { length: 255 }),
+
+  entityType: mysqlEnum("entity_type", ["BOOKING", "SUBSCRIPTION"]).notNull(),
+  entityId: varchar("entity_id", { length: 36 }).notNull(),
+
+  amount: int("amount").notNull(),
+  currency: varchar("currency", { length: 3 }).default("INR").notNull(),
+
+  status: mysqlEnum("status", [
+    "PENDING",
+    "CAPTURED",
+    "FAILED",
+    "REFUNDED",
+  ])
+    .default("PENDING")
+    .notNull(),
+
+  paymentMethod: varchar("payment_method", { length: 50 }),
+
+  metadata: json("metadata"),
+
+  createdAt: datetime("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+
+  updatedAt: datetime("updated_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .$onUpdateFn(() => sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+}, (t) => ({
+  razorpayOrderUnique: uniqueIndex("payment_razorpay_order_unique")
+    .on(t.razorpayOrderId),
+}));
