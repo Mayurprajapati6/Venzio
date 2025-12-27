@@ -1,5 +1,6 @@
 import { db } from "../../db";
 import { BookingCancelRepository } from "./booking.cancel.repository";
+import { EscrowService } from "../escrow/escrow.service";
 import {
   BadRequestError,
   ForbiddenError,
@@ -75,6 +76,15 @@ export class BookingCancelService {
       }
 
       await BookingCancelRepository.cancelBooking(tx, bookingId);
+
+      // Trigger escrow refund check (if payment was completed)
+      // Escrow service will handle refund if cancellation is before startDate
+      try {
+        await EscrowService.handleBookingCancellation(bookingId);
+      } catch (error: any) {
+        // Log error but don't fail cancellation
+        console.error("Escrow refund check failed:", error.message);
+      }
 
       return {
         message: "Booking cancelled successfully",
