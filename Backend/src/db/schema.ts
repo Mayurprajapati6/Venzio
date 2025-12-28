@@ -31,6 +31,9 @@ export const users = mysqlTable("users", {
 
   trustScore: int("trust_score").default(100).notNull(),
 
+  resetToken: varchar("reset_token", { length: 255 }),
+  resetTokenExpiry: datetime("reset_token_expiry"),
+
   accountStatus: mysqlEnum("account_status", [
     "ACTIVE",
     "UNDER_MONITORING",
@@ -46,6 +49,27 @@ export const users = mysqlTable("users", {
   emailUnique: uniqueIndex("users_email_unique").on(t.email),
   phoneUnique: uniqueIndex("users_phone_unique").on(t.phone),
 }));
+
+/* ======================
+ Refresh Token
+======================= */
+
+export const refreshTokens = mysqlTable("refresh_tokens", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+
+  userId: varchar("user_id", { length: 36 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  token: varchar("token", { length: 500 }).notNull(),
+
+  expiresAt: datetime("expires_at").notNull(),
+
+  revoked: boolean("revoked").default(false),
+
+  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 
 /* =======================
    CATEGORY
