@@ -6,11 +6,16 @@ import v2Router from './routers/v2/index.router';
 import { appErrorHandler, genericErrorHandler } from './middlewares/error.middleware';
 import logger from './config/logger.config';
 import { attachCorrelationIdMiddleware } from './middlewares/correlation.middleware';
+import { rawBodyMiddleware } from './middlewares/raw-body.middleware';
 import { db } from "./db"; 
+import cookieParser from "cookie-parser";
 
 const app = express();
 
+// Preserve raw body for webhook signature verification
+app.use(rawBodyMiddleware);
 app.use(express.json());
+app.use(cookieParser());
 
 /**
  * Registering all the routers and their corresponding routes with out app server object.

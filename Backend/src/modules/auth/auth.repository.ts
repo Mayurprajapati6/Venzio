@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { users } from "../../db/schema";
+import { refreshTokens, users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -35,4 +35,32 @@ export class AuthRepository {
 
     return result[0] ?? null;
   }
+
+  // refresh token
+  
+  static async saveRefreshToken(data: {
+    userId: string;
+    token: string;
+    expiresAt: Date;
+  }) {
+    await db.insert(refreshTokens).values({
+      id: randomUUID(),
+      ...data,
+    });
+  }
+
+  static async findRefreshToken(token: string) {
+    const result = await db.select().from(refreshTokens)
+      .where(eq(refreshTokens.token, token))
+      .limit(1);
+    return result[0] ?? null;
+  }
+
+  static async revokeRefreshToken(token: string) {
+    await db.update(refreshTokens)
+      .set({ revoked: true })
+      .where(eq(refreshTokens.token, token));
+  }
 }
+
+

@@ -1,74 +1,78 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { AuthService } from "./auth.service";
-import { AppError } from "../../utils/errors/app.error";
 
 export class AuthController {
 
   static async signup(req: Request, res: Response) {
-    try {
-      const result = await AuthService.signup(req.body);
+    const result = await AuthService.signup(req.body);
 
-      return res.status(StatusCodes.CREATED).json({
-        success: true,
-        data: result,
-      });
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
-    } catch (err: unknown) {
-
-      console.log("signup err", err);
-      if (AuthController.isAppError(err)) {
-        return res.status(err.statusCode).json({
-          success: false,
-          error: err.name,      
-          message: err.message,
-        });
-      }
-
-      
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: "InternalServerError",
-        message: "Something went wrong",
-      });
-    }
+    return res.status(StatusCodes.CREATED).json({
+      success: true,
+      data: {
+        accessToken: result.accessToken,
+        user: result.user,
+      },
+    });
   }
 
   static async login(req: Request, res: Response) {
-    try {
-      const { email, password } = req.body;
-      const result = await AuthService.login(email, password);
+    const { email, password } = req.body;
+    const result = await AuthService.login(email, password);
 
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        data: result,
-      });
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
-    } catch (err: unknown) {
-
-      if (AuthController.isAppError(err)) {
-        return res.status(err.statusCode).json({
-          success: false,
-          error: err.name,
-          message: err.message,
-        });
-      }
-
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        error: "InternalServerError",
-        message: "Something went wrong",
-      });
-    }
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      data: {
+        accessToken: result.accessToken,
+        user: result.user,
+      },
+    });
   }
 
-  
-  private static isAppError(error: unknown): error is AppError {
-    return (
-      typeof error === "object" &&
-      error !== null &&
-      "statusCode" in error &&
-      "message" in error
-    );
+  static async refresh(req: Request, res: Response) {
+    const token = req.cookies?.refreshToken;
+    const result = await AuthService.refresh(token);
+
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
+
+    return res.json({ accessToken: result.accessToken });
+  }
+
+  static async logout(req: Request, res: Response) {
+    const token = req.cookies?.refreshToken;
+    await AuthService.logout(token);
+
+    res.clearCookie("refreshToken");
+    return res.json({ success: true });
+  }
+
+  static async forgotPassword(req: Request, res: Response) {
+    const { email } = req.body.email;
+    await AuthService.forgotPassword(email);
+    return res.json({ success: true });
+  }
+
+  static async resetPassword(req: Request, res: Response) {
+    const { token, password} = req.body;
+    await AuthService.resetPassword(token, password);
+    return res.json({ success: true });
   }
 }
