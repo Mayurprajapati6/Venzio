@@ -1,4 +1,5 @@
-import { attendance, bookings, holidays } from "../../db/schema";
+import { db } from "../../db";
+import { attendance, bookings, holidays, facilities, users, slotTemplates } from "../../db/schema";
 import { and, eq, between, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -41,13 +42,69 @@ export class AttendanceRepository {
     tx: any,
     bookingId: string
   ) {
-    const [row] = await tx
-      .select()
-      .from(bookings)
-      .where(eq(bookings.id, bookingId))
-      .for("update");
+    const rows = (await tx.execute(sql`
+      SELECT * FROM bookings WHERE id = ${bookingId} FOR UPDATE
+    `)) as any[];
+    return rows[0] || null;
+  }
 
-    return row;
+  /**
+   * Get booking with facility and user details for QR scan preview
+   */
+  static async getBookingWithDetails(bookingId: string) {
+    const result = (await db.execute(sql`
+      SELECT 
+        b.id as bookingId,
+        b.facility_id as facilityId,
+        b.slot_type as slotType,
+        b.pass_days as passDays,
+        b.start_date as startDate,
+        b.end_date as endDate,
+        b.active_days_remaining as activeDaysRemaining,
+        b.status as bookingStatus,
+        f.name as facilityName,
+        f.owner_id as ownerId,
+        u.name as userName,
+        st.start_time as slotStartTime,
+        st.end_time as slotEndTime
+      FROM bookings b
+      INNER JOIN facilities f ON b.facility_id = f.id
+      INNER JOIN users u ON b.user_id = u.id
+      LEFT JOIN slot_templates st ON f.id = st.facility_id AND b.slot_type = st.slot_type
+      WHERE b.id = ${bookingId}
+    `)) as any[] as Array<{
+      bookingId: string;
+      facilityId: string;
+      slotType: string;
+      passDays: number;
+      startDate: Date;
+      endDate: Date;
+      activeDaysRemaining: number;
+      bookingStatus: string;
+      facilityName: string;
+      ownerId: string;
+      userName: string;
+      slotStartTime: string | null;
+      slotEndTime: string | null;
+    }>;
+
+    return result[0] || null;
+  }
+
+  /**
+   * Check if attendance already marked today
+   */
+  static async checkAttendanceToday(bookingId: string, date: Date) {
+    const rows = await db
+      .select()
+      .from(attendance)
+      .where(
+        and(
+          eq(attendance.bookingId, bookingId),
+          eq(attendance.date, date)
+        )
+      );
+    return rows.length > 0;
   }
 
   static async insertAttendance(
