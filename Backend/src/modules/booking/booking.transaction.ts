@@ -6,6 +6,7 @@ import {
   PLATFORM_FEE_MAP,
   ALLOWED_PASS_DAYS,
 } from "./booking.constants";
+import { generateQR } from "../../utils/helpers/qr";
 
 export async function createBookingTransaction(payload: any) {
   return db.transaction(async (tx) => {
@@ -43,9 +44,22 @@ export async function createBookingTransaction(payload: any) {
     );
     if (!template) throw new Error("SLOT_TEMPLATE_NOT_FOUND");
 
-    // ✅ ADD: explicit pass support check
-    let baseAmount: number | null = null;
+    /* =======================
+       VALIDITY GUARD (ADDED)
+    ======================= */
+    const bookingStart = new Date(startDate);
+    bookingStart.setHours(0, 0, 0, 0);
 
+    const tplFrom = new Date(template.validFrom);
+    const tplTill = new Date(template.validTill);
+    tplFrom.setHours(0, 0, 0, 0);
+    tplTill.setHours(0, 0, 0, 0);
+
+    if (bookingStart < tplFrom || bookingStart > tplTill) {
+      throw new Error("SLOT_OUTSIDE_VALIDITY");
+    }
+
+    let baseAmount: number | null = null;
     if (passDays === 1) baseAmount = template.price1Day;
     if (passDays === 3) baseAmount = template.price3Day;
     if (passDays === 7) baseAmount = template.price7Day;
@@ -58,6 +72,8 @@ export async function createBookingTransaction(payload: any) {
 
     let remainingDays = passDays;
     let cursor = new Date(startDate);
+    cursor.setHours(0, 0, 0, 0);
+
     let endDate = new Date(startDate);
 
     while (remainingDays > 0) {
@@ -75,7 +91,7 @@ export async function createBookingTransaction(payload: any) {
           slotType
         );
 
-        if (!slot) throw new Error("SLOT_NOT_AVAILABLE");
+        if (!slot) throw new Error("SLOT_NOT_GENERATED");
         if (slot.booked >= slot.capacity)
           throw new Error("SLOT_FULL");
 
@@ -88,6 +104,14 @@ export async function createBookingTransaction(payload: any) {
     }
 
     const bookingId = randomUUID();
+
+    const qrCode = generateQR({
+      bookingId,
+      facilityId,
+      slotType,
+      validFrom: startDate.toISOString(),
+      validTill: endDate.toISOString(),
+    });
 
     await BookingRepository.insertBooking(tx, {
       id: bookingId,
@@ -103,7 +127,7 @@ export async function createBookingTransaction(payload: any) {
       totalAmount: baseAmount + platformFee,
       status: BookingStatus.ACCEPTED,
       idempotencyKey,
-      qrCode: `QR-${bookingId}`,
+      qrCode,
     });
 
     return {
@@ -112,7 +136,7 @@ export async function createBookingTransaction(payload: any) {
       startDate,
       endDate,
       activeDaysRemaining: passDays,
-      qrCode: `QR-${bookingId}`,
+      qrCode,
     };
   });
 }

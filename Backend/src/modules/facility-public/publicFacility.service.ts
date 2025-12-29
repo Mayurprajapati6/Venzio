@@ -6,6 +6,10 @@ import {
   setCachedSearch,
   getSearchCacheKey,
 } from "../../cache/search.cache";
+import { SlotGenerationService } from "../slot/slotGeneration.service";
+import { db } from "../../db";
+import { facilities } from "../../db/schema";
+import { eq, and } from "drizzle-orm";
 
 export class PublicFacilityService {
   static async search(query: any) {
@@ -43,9 +47,22 @@ export class PublicFacilityService {
     const pageNum = Math.max(Number(page), 1);
     const limitNum = Math.min(Number(limit), 20);
 
-    // -------------------------
-    // 🔥 Redis cache
-    // -------------------------
+
+    const activeFacilities = await db
+      .select({ id: facilities.id })
+      .from(facilities)
+      .where(
+        and(
+          eq(facilities.isPublished, true),
+          eq(facilities.approvalStatus, "APPROVED"),
+          eq(facilities.state, state)
+        )
+      );
+
+    for (const f of activeFacilities) {
+      await SlotGenerationService.regenerateForFacility(f.id);
+    }
+
     const cacheKey = getSearchCacheKey({
       state,
       city,

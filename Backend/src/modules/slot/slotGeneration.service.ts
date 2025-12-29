@@ -4,8 +4,10 @@ import { db } from "../../db";
 import { slotTemplates } from "../../db/schema";
 import { eq } from "drizzle-orm";
 
+
+const AUTO_EXTEND_DAYS = 15;
+
 export class SlotGenerationService {
-  
   static async generateForTemplate(templateId: string) {
     const [template] = await db
       .select()
@@ -14,11 +16,8 @@ export class SlotGenerationService {
 
     if (!template) return;
 
-    // Fetch holiday ranges for this facility
     const holidayRanges =
-      await HolidayRepository.getRangesForFacility(
-        template.facilityId
-      );
+      await HolidayRepository.getRangesForFacility(template.facilityId);
 
     const isHoliday = (date: Date) =>
       holidayRanges.some(
@@ -28,8 +27,21 @@ export class SlotGenerationService {
     let current = new Date(template.validFrom);
     current.setHours(0, 0, 0, 0);
 
-    const end = new Date(template.validTill);
+  
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let end = new Date(template.validTill);
     end.setHours(0, 0, 0, 0);
+
+    if (end < today) {
+      end = new Date(today);
+      end.setDate(end.getDate() + AUTO_EXTEND_DAYS);
+
+      await SlotRepository.updateTemplate(template.id, {
+        validTill: end,
+      });
+    }
 
     while (current <= end) {
       if (!isHoliday(current)) {
@@ -48,16 +60,12 @@ export class SlotGenerationService {
           );
         }
       }
-
       current.setDate(current.getDate() + 1);
     }
   }
 
-  
   static async regenerateForFacility(facilityId: string) {
-    const templates =
-      await SlotRepository.getTemplatesByFacility(facilityId);
-
+    const templates = await SlotRepository.getTemplatesByFacility(facilityId);
     for (const tpl of templates) {
       await this.generateForTemplate(tpl.id);
     }

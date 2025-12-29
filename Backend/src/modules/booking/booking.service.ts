@@ -18,7 +18,6 @@ export class BookingService {
 
     try {
       const result = await createBookingTransaction(payload);
-
       await saveIdempotency(payload.idempotencyKey, result);
       return result;
     } catch (err: any) {
@@ -31,10 +30,15 @@ export class BookingService {
         SLOT_TEMPLATE_NOT_FOUND: new NotFoundError("Slot template not found"),
         FACILITY_NOT_BOOKABLE: new ForbiddenError("Facility not bookable"),
         SLOT_NOT_GENERATED: new NotFoundError("Slots not generated"),
+        SLOT_OUTSIDE_VALIDITY: new BadRequestError(
+          "Slot not available for selected date"
+        ),
       };
 
-      throw errorMap[err.message] ??
-        new InternalServerError("Booking failed");
+      throw (
+        errorMap[err.message] ??
+        new InternalServerError("Booking failed")
+      );
     }
   }
 }
