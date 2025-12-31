@@ -38,7 +38,13 @@ export class AuthService {
   static async login(email: string, password: string) {
     const user = await AuthRepository.findByEmail(email);
     if(!user) {
-      throw new UnauthorizedError("Invalid credentials");
+      throw new UnauthorizedError("Invalid credentials ");
+    }
+
+    if (user.accountStatus === "SUSPENDED") {
+      throw new UnauthorizedError(
+        "Your account has been blocked."
+      );
     }
 
     const match = await bcrypt.compare(password, user.password);
