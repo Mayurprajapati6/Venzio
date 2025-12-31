@@ -173,5 +173,18 @@ export class EscrowController {
       });
     }
   }
+
+  // ADMIN
+  static async adminDashboard(req: AuthRequest, res: Response) {
+    const data = await EscrowService.getAdminEscrowDashboard();
+    res.status(StatusCodes.OK).json({ success: true, data });
+  }
+
+  // OWNER
+  static async ownerDashboard(req: AuthRequest, res: Response) {
+    const ownerId = req.user!.userId;
+    const data = await EscrowService.getOwnerEscrowDashboard(ownerId);
+    res.status(StatusCodes.OK).json({ success: true, data });
+  }
 }
 

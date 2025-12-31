@@ -39,5 +39,19 @@ router.patch(
   EscrowController.forceRefund
 );
 
+router.get(
+  "/dashboard/admin",
+  authenticate,
+  authorizeRoles("ADMIN"),
+  EscrowController.adminDashboard
+);
+
+router.get(
+  "/dashboard/owner",
+  authenticate,
+  authorizeRoles("OWNER"),
+  EscrowController.ownerDashboard
+);
+
 export default router;
 

@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { razorpay, RAZORPAY_WEBHOOK_SECRET } from "../../lib/razorpay";
 import { PaymentRepository } from "./payment.repository";
 import { db } from "../../db";
-import { bookings, ownerSubscriptions, facilities } from "../../db/schema";
+import { bookings, ownerSubscriptions } from "../../db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import {
   NotFoundError,
@@ -220,12 +220,15 @@ export class PaymentService {
             SET status = 'CAPTURED', 
                 razorpay_payment_id = ${payment_id},
                 payment_method = ${method ?? null},
-                metadata = JSON_MERGE_PATCH(COALESCE(metadata, '{}'), ${JSON.stringify(webhookPayload.payload)}),
+                metadata = JSON_MERGE_PATCH(
+                  COALESCE(metadata, '{}'),
+                  ${JSON.stringify(webhookPayload.payload)}
+                ),
                 updated_at = CURRENT_TIMESTAMP
             WHERE razorpay_order_id = ${order_id}`
       );
 
-      // Handle based on entity type
+      
       if (payment.entityType === "BOOKING") {
         // Lock booking row and verify status
         const bookingRows = await tx.execute(
@@ -286,20 +289,21 @@ export class PaymentService {
       } else if (payment.entityType === "SUBSCRIPTION") {
         const metadata = payment.metadata as PaymentMetadata | null;
         const ownerId = metadata?.ownerId || metadata?.notes?.ownerId;
+
         if (!ownerId) {
           throw new InternalServerError("Owner ID not found in payment metadata");
         }
 
-        // Create subscription (has its own idempotency check)
-        await SubscriptionService.purchase(ownerId);
+    
+        const { id: subscriptionId } =
+          await SubscriptionService.purchaseTx(tx, ownerId);
 
-        // Update payment entityId with actual subscription ID
-        const subscription = await SubscriptionService.checkActive(ownerId);
-        if (subscription) {
-          await tx.execute(
-            sql`UPDATE payments SET entity_id = ${subscription.id}, updated_at = CURRENT_TIMESTAMP WHERE razorpay_order_id = ${order_id}`
-          );
-        }
+        await tx.execute(
+          sql`UPDATE payments
+              SET entity_id = ${subscriptionId},
+                  updated_at = CURRENT_TIMESTAMP
+              WHERE razorpay_order_id = ${order_id}`
+        );
       }
 
       return {

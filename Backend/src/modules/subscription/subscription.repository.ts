@@ -2,6 +2,7 @@
 import { db } from "../../db";
 import { eq, and, gt, lt } from "drizzle-orm";
 import { ownerSubscriptions } from "../../db/schema";
+import type { SubscriptionCreateInput } from "./subscription.types";
 
 export class SubscriptionRepository {
   static async getActiveByOwner(ownerId: string) {
@@ -21,12 +22,7 @@ export class SubscriptionRepository {
     return sub ?? null;
   }
 
-  static async create(data: {
-    id: string;
-    ownerId: string;
-    startDate: Date;
-    endDate: Date;
-  }) {
+  static async create(data: SubscriptionCreateInput & { id: string }) {
     await db.insert(ownerSubscriptions).values({
       ...data,
       isActive: true,

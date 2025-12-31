@@ -21,6 +21,7 @@ import type {
   EscrowRefundInput,
   EscrowBlockInput,
 } from "./escrow.types";
+import { groupEscrowsByFacility } from "./escrow.aggregation";
 
 export class EscrowService {
   /**
@@ -319,5 +320,38 @@ export class EscrowService {
     }
     return escrow;
   }
+
+  static async getAdminEscrowDashboard() {
+  const [today, upcoming, expired] = await Promise.all([
+    EscrowRepository.getTodayEscrows(),
+    EscrowRepository.getUpcomingEscrows(),
+    EscrowRepository.getExpiredEscrows(),
+  ]);
+
+  return {
+    today: groupEscrowsByFacility(today as any[]),
+    upcoming: groupEscrowsByFacility(upcoming as any[]),
+    expired: groupEscrowsByFacility(expired as any[]),
+  };
+}
+
+  static async getOwnerEscrowDashboard(ownerId: string) {
+  const [today, upcoming, expired] = await Promise.all([
+    EscrowRepository.getTodayEscrows(),
+    EscrowRepository.getUpcomingEscrows(),
+    EscrowRepository.getExpiredEscrows(),
+  ]);
+
+  const filter = (rows: any[]) =>
+    rows.filter((r) => r.owner_id === ownerId);
+
+  return {
+    today: groupEscrowsByFacility(filter(today as any[])),
+    upcoming: groupEscrowsByFacility(filter(upcoming as any[])),
+    expired: groupEscrowsByFacility(filter(expired as any[])),
+  };
+}
+
+  
 }
 

@@ -1,12 +1,23 @@
-import express from 'express'
+import express from "express";
 import { authenticate } from "../../middlewares/auth.middleware";
 import { authorizeRoles } from "../../middlewares/role.middleware";
-import { SubscriptionController } from './subscription.controller';
+import { SubscriptionController } from "./subscription.controller";
 
 const router = express.Router();
 
-router.post('/purchase',authenticate,authorizeRoles('OWNER'),SubscriptionController.purchase);
-router.get('/me',authenticate,authorizeRoles('OWNER'),SubscriptionController.getMySubscription);
-router.get('/admin/all',authenticate,authorizeRoles('ADMIN'),SubscriptionController.adminGetAll);
+
+router.get(
+  "/me",
+  authenticate,
+  authorizeRoles("OWNER"),
+  SubscriptionController.getMySubscription
+);
+
+router.get(
+  "/admin/all",
+  authenticate,
+  authorizeRoles("ADMIN"),
+  SubscriptionController.adminGetAll
+);
 
 export default router;

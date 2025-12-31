@@ -5,7 +5,7 @@ import { ConflictError } from "../../utils/errors/app.error";
 const SUBSCRIPTION_DURATION_DAYS = 90;
 
 export class SubscriptionService {
-  static async purchase(ownerId: string) {
+  static async purchaseTx(tx: any, ownerId: string) {
     const existing = await SubscriptionRepository.getActiveByOwner(ownerId);
 
     if (existing) {
@@ -16,15 +16,19 @@ export class SubscriptionService {
     const endDate = new Date();
     endDate.setDate(startDate.getDate() + SUBSCRIPTION_DURATION_DAYS);
 
-    await SubscriptionRepository.create({
-      id: randomUUID(),
-      ownerId,
-      startDate,
-      endDate,
+    const id = randomUUID();
+
+    await tx.insert("owner_subscriptions").values({
+      id,
+      owner_id: ownerId,
+      start_date: startDate,
+      end_date: endDate,
+      is_active: true,
     });
 
     return {
       message: "Subscription activated successfully",
+      id,
       startDate,
       endDate,
     };

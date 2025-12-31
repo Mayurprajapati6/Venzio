@@ -136,5 +136,61 @@ export class EscrowRepository {
     `) as any[];
     return rows.length > 0;
   }
+
+  static async getTodayEscrows() {
+    return db.execute(sql`
+      SELECT 
+        e.*,
+        b.user_id,
+        b.pass_days,
+        b.end_date,
+        f.name AS facility_name,
+        f.id AS facility_id
+      FROM escrows e
+      JOIN bookings b ON b.id = e.booking_id
+      JOIN facilities f ON f.id = b.facility_id
+      WHERE e.status = 'HELD'
+        AND DATE(e.release_date) = CURRENT_DATE
+      ORDER BY f.id
+    `);
+  }
+
+  // 🟡 UPCOMING (rolling next 7 days)
+  static async getUpcomingEscrows() {
+    return db.execute(sql`
+      SELECT 
+        e.*,
+        b.user_id,
+        b.pass_days,
+        b.end_date,
+        f.name AS facility_name,
+        f.id AS facility_id
+      FROM escrows e
+      JOIN bookings b ON b.id = e.booking_id
+      JOIN facilities f ON f.id = b.facility_id
+      WHERE e.status = 'HELD'
+        AND DATE(e.release_date) BETWEEN CURRENT_DATE + INTERVAL 1 DAY
+                                     AND CURRENT_DATE + INTERVAL 7 DAY
+      ORDER BY e.release_date ASC
+    `);
+  }
+
+  // ⚫ EXPIRED (already released)
+  static async getExpiredEscrows() {
+    return db.execute(sql`
+      SELECT 
+        e.*,
+        b.user_id,
+        b.pass_days,
+        b.end_date,
+        f.name AS facility_name,
+        f.id AS facility_id
+      FROM escrows e
+      JOIN bookings b ON b.id = e.booking_id
+      JOIN facilities f ON f.id = b.facility_id
+      WHERE e.status = 'RELEASED'
+      ORDER BY e.released_at DESC
+    `);
+  }
 }
 

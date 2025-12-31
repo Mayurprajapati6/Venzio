@@ -1,8 +1,13 @@
+import cron from "node-cron";
 import { db } from "../db";
 import { ownerSubscriptions } from "../db/schema";
 import { lt, eq } from "drizzle-orm";
 
-export async function subscriptionReminderJob() {
+/**
+ * Runs daily at 03:00 AM
+ * Deactivates expired subscriptions
+ */
+cron.schedule("0 3 * * *", async () => {
   const now = new Date();
 
   const expired = await db
@@ -16,7 +21,8 @@ export async function subscriptionReminderJob() {
       .set({ isActive: false })
       .where(eq(ownerSubscriptions.id, sub.id));
 
-    // TODO:
-    // send email: "Your subscription expired"
+    // TODO: send email notification
   }
-}
+
+  console.log("[CRON] Subscription expiry check completed");
+});
