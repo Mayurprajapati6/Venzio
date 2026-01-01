@@ -1,6 +1,7 @@
 import { db } from "../../db";
 import { facilities } from "../../db/schema";
 import { eq,  sql } from "drizzle-orm";
+import { FacilityCurrentBooking } from "./ownerDashboard.types";
 
 export class OwnerDashboardRepository {
   
@@ -410,5 +411,104 @@ export class OwnerDashboardRepository {
       releasedPayouts: Number(counts[0]?.releasedPayouts || 0),
     };
   }
+
+  static async getFacilityBookings(ownerId: string, facilityId: string) {
+  // ============================
+  // CURRENT BOOKINGS
+  // ============================
+  const currentBookings =
+    (await db.execute(sql`
+      SELECT
+        b.id as bookingId,
+        u.id as userId,
+        u.name as userName,
+        u.email as userEmail,
+        b.slot_type as slotType,
+        b.pass_days as passDays,
+        b.start_date as startDate,
+        b.end_date as endDate,
+        b.active_days_remaining as activeDaysRemaining
+      FROM bookings b
+      INNER JOIN users u ON b.user_id = u.id
+      INNER JOIN facilities f ON b.facility_id = f.id
+      WHERE f.owner_id = ${ownerId}
+        AND f.id = ${facilityId}
+        AND b.status IN ('ACCEPTED', 'ACTIVE')
+      ORDER BY b.start_date DESC
+    `)) as unknown as FacilityCurrentBooking[];
+
+  // ============================
+  // PAST BOOKINGS (GROUPED BY USER)
+  // ============================
+  const pastRows =
+    (await db.execute(sql`
+      SELECT
+        u.id as userId,
+        u.name as userName,
+        u.email as userEmail,
+        b.id as bookingId,
+        b.slot_type as slotType,
+        b.pass_days as passDays,
+        b.start_date as startDate,
+        b.end_date as endDate,
+        b.total_amount as totalAmount,
+        e.platform_fee as platformFee
+      FROM bookings b
+      INNER JOIN users u ON b.user_id = u.id
+      INNER JOIN facilities f ON b.facility_id = f.id
+      LEFT JOIN escrows e ON e.booking_id = b.id
+      WHERE f.owner_id = ${ownerId}
+        AND f.id = ${facilityId}
+        AND b.status = 'COMPLETED'
+      ORDER BY b.end_date DESC
+    `)) as unknown as Array<{
+      userId: string;
+      userName: string;
+      userEmail: string;
+      bookingId: string;
+      slotType: "MORNING" | "AFTERNOON" | "EVENING";
+      passDays: number;
+      startDate: Date;
+      endDate: Date;
+      totalAmount: number;
+      platformFee: number | null;
+    }>;
+
+  // ============================
+  // GROUP BY USER
+  // ============================
+  const pastMap = new Map<string, any>();
+
+  for (const r of pastRows) {
+    if (!pastMap.has(r.userId)) {
+      pastMap.set(r.userId, {
+        userId: r.userId,
+        userName: r.userName,
+        userEmail: r.userEmail,
+        totalBookings: 0,
+        bookings: [],
+      });
+    }
+
+    pastMap.get(r.userId).totalBookings += 1;
+    pastMap.get(r.userId).bookings.push({
+      bookingId: r.bookingId,
+      slotType: r.slotType,
+      passDays: Number(r.passDays),
+      startDate: r.startDate,
+      endDate: r.endDate,
+      totalAmount: Number(r.totalAmount),
+      platformFee: Number(r.platformFee || 0),
+      ownerEarning:
+        Number(r.totalAmount) - Number(r.platformFee || 0),
+    });
+  }
+
+  return {
+    currentBookings,
+    pastUsers: Array.from(pastMap.values()),
+  };
+}
+
 }
 

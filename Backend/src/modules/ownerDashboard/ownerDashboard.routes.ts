@@ -27,5 +27,10 @@ router.get("/summary", OwnerDashboardController.getQuickCounts);
 // facilities reviews
 router.get("/facilities/:facilityId/reviews", OwnerDashboardController.getFacilityReviews);
 
+router.get(
+  "/facilities/:facilityId/bookings",
+  OwnerDashboardController.getFacilityBookings
+);
+
 export default router;
 

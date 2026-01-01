@@ -130,5 +130,16 @@ export class OwnerDashboardController {
       });
     }
   }
+
+  static async getFacilityBookings(req: AuthRequest, res: Response) {
+    const ownerId = req.user!.userId;
+    const { facilityId } = req.params;
+
+    const data =
+      await OwnerDashboardService.getFacilityBookings(ownerId, facilityId);
+
+    res.json({ success: true, data });
+  }
+
 }
 

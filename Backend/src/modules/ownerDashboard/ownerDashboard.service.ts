@@ -6,6 +6,7 @@ import type {
   FacilityUsersResponse,
   QuickCountsResponse,
   FacilityReviewsResponse,
+  FacilityBookingsResponse,
 } from "./ownerDashboard.types";
 
 export class OwnerDashboardService {
@@ -43,5 +44,23 @@ export class OwnerDashboardService {
   ): Promise<FacilityReviewsResponse> {
     return await OwnerDashboardRepository.getFacilityReviews(ownerId, facilityId);
   }
+
+  static async getFacilityBookings(
+  ownerId: string,
+  facilityId: string
+): Promise<FacilityBookingsResponse> {
+  const data =
+    await OwnerDashboardRepository.getFacilityBookings(
+      ownerId,
+      facilityId
+    );
+
+  return {
+    facilityId,
+    facilityName: "", // already known on frontend
+    currentBookings: data.currentBookings,
+    pastUsers: data.pastUsers,
+  };
+}
 }
 

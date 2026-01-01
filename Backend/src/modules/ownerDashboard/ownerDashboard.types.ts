@@ -120,3 +120,40 @@ export interface QuickCountsResponse {
   releasedPayouts: number;
 }
 
+export interface FacilityCurrentBooking {
+  bookingId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  slotType: "MORNING" | "AFTERNOON" | "EVENING";
+  passDays: number;
+  startDate: Date;
+  endDate: Date;
+  activeDaysRemaining: number;
+}
+
+export interface FacilityPastUser {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  totalBookings: number;
+  bookings: Array<{
+    bookingId: string;
+    slotType: "MORNING" | "AFTERNOON" | "EVENING";
+    passDays: number;
+    startDate: Date;
+    endDate: Date;
+    totalAmount: number;
+    platformFee: number;
+    ownerEarning: number;
+  }>;
+}
+
+export interface FacilityBookingsResponse {
+  facilityId: string;
+  facilityName: string;
+  currentBookings: FacilityCurrentBooking[];
+  pastUsers: FacilityPastUser[];
+}
+
+
